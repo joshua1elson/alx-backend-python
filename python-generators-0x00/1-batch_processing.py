@@ -1,40 +1,32 @@
-Batch processing Large Data
-mandatory
-Objective: Create a generator to fetch and process data in batches from the users database
+ """def batch_users(batch_size=100, min_age=50):
+    ..."""
 
-Instructions:
 
-Write a function stream_users_in_batches(batch_size) that fetches rows in batches
+# 1-batch_processing.py
 
-Write a function batch_processing() that processes each batch to filter users over the age of25`
+import mysql.connector
 
-You must use no more than 3 loops in your code. Your script must use the yield generator
+def batch_users(batch_size=100, min_age=50):
+    """Generator that yields batches of users with age > min_age"""
+    connection = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",  # ← Replace with your MySQL password
+        database="ALX_prodev"
+    )
 
-Prototypes:
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM user_data WHERE age > %s", (min_age,))
 
-def stream_users_in_batches(batch_size)
-def batch_processing(batch_size)
-(venv) faithokoth@Faiths-MacBook-Pro python-generators-0x00 % cat 2-main.py                
-#!/usr/bin/python3
-import sys
-processing = __import__('1-batch_processing')
+    batch = []
+    for row in cursor:
+        batch.append(row)
+        if len(batch) == batch_size:
+            yield batch
+            batch = []
 
-##### print processed users in a batch of 50
-try:
-    processing.batch_processing(50)
-except BrokenPipeError:
-    sys.stderr.close()
+    if batch:  # yield remaining rows if any
+        yield batch
 
-(venv) faithokoth@Faiths-MacBook-Pro python-generators-0x00 % ./2-main.py | head -n 5 
-
-{'user_id': '00234e50-34eb-4ce2-94ec-26e3fa749796', 'name': 'Dan Altenwerth Jr.', 'email': 'Molly59@gmail.com', 'age': 67}
-
-{'user_id': '006bfede-724d-4cdd-a2a6-59700f40d0da', 'name': 'Glenda Wisozk', 'email': 'Miriam21@gmail.com', 'age': 119}
-
-{'user_id': '006e1f7f-90c2-45ad-8c1d-1275d594cc88', 'name': 'Daniel Fahey IV', 'email': 'Delia.Lesch11@hotmail.com', 'age': 49}
-
-{'user_id': '00cc08cc-62f4-4da1-b8e4-f5d9ef5dbbd4', 'name': 'Alma Bechtelar', 'email': 'Shelly_Balistreri22@hotmail.com', 'age': 102}
-
-{'user_id': '01187f09-72be-4924-8a2d-150645dcadad', 'name': 'Jonathon Jones', 'email': 'Jody.Quigley-Ziemann33@yahoo.com', 'age': 116}
-
-(venv) faithokoth@Faiths-MacBook-Pro python-generators-0x00 % 
+    cursor.close()
+    connection.close()
