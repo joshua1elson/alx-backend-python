@@ -1,22 +1,18 @@
- """def batch_users(batch_size=100, min_age=50):
-    ..."""
-
-
 # 1-batch_processing.py
 
 import mysql.connector
 
-def batch_users(batch_size=100, min_age=50):
-    """Generator that yields batches of users with age > min_age"""
+def stream_users_in_batches(batch_size=100):
+    """Generator: Yields users in batches where age > 25"""
     connection = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="",  # ← Replace with your MySQL password
+        password="",  # Replace with your actual password
         database="ALX_prodev"
     )
 
     cursor = connection.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM user_data WHERE age > %s", (min_age,))
+    cursor.execute("SELECT * FROM user_data WHERE age > 25")
 
     batch = []
     for row in cursor:
@@ -25,8 +21,14 @@ def batch_users(batch_size=100, min_age=50):
             yield batch
             batch = []
 
-    if batch:  # yield remaining rows if any
+    if batch:  # Yield any remaining users
         yield batch
 
     cursor.close()
     connection.close()
+
+def batch_processing():
+    """Example function that consumes the generator (age > 25)."""
+    for batch in stream_users_in_batches():
+        for user in batch:
+            print(user)
