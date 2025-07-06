@@ -32,3 +32,6 @@ def batch_processing():
     for batch in stream_users_in_batches():
         for user in batch:
             print(user)
+
+
+grep return 1-batch_processing.py
