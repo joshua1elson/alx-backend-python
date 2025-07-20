@@ -5,12 +5,11 @@ import functools
 def log_queries(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        # Try to extract the query from either args or kwargs
-        query = kwargs.get('query') or (args[0] if args else None)
+        query = kwargs.get('query') if 'query' in kwargs else args[0] if args else None
         if query:
-            print(f"[LOG] Executing SQL Query: {query}")
+            print(f"Executing SQL Query: {query}")
         else:
-            print("[LOG] No SQL query found in function call.")
+            print("No SQL query provided.")
         return func(*args, **kwargs)
     return wrapper
 
