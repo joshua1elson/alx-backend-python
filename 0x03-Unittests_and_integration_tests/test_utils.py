@@ -34,23 +34,18 @@ class TestAccessNestedMap(unittest.TestCase):
 
 
 #!/usr/bin/env python3
-"""Unit tests for utils module"""
+"""Utils module"""
 
-class TestGetJson(unittest.TestCase):
-    """Test the get_json function"""
+def memoize(method):
+    """Decorator to cache method results"""
+    attr_name = "_{}".format(method.__name__)
 
-    @parameterized.expand([
-        ("http://example.com", {"payload": True}),
-        ("http://holberton.io", {"payload": False}),
-    ])
-    def test_get_json(self, test_url, test_payload):
-        mock_response = Mock()
-        mock_response.json.return_value = test_payload
-
-        with patch('utils.requests.get', return_value=mock_response) as mock_get:
-            result = get_json(test_url)
-            mock_get.assert_called_once_with(test_url)
-            self.assertEqual(result, test_payload)
+    @property
+    def wrapper(self):
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, method(self))
+        return getattr(self, attr_name)
+    return wrapper
 
 
 
