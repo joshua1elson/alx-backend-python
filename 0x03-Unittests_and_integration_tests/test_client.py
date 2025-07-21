@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Unit tests for GithubOrgClient"""
+"""Unit and integration tests for GithubOrgClient"""
 
 import unittest
-from parameterized import parameterized
 from unittest.mock import patch, PropertyMock
+from parameterized import parameterized, parameterized_class
 from client import GithubOrgClient
+from fixtures import TEST_PAYLOAD
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -71,8 +72,6 @@ class TestGithubOrgClient(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-
-
 @parameterized_class([
     {
         "org_payload": TEST_PAYLOAD["org_payload"],
@@ -86,15 +85,19 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Start patcher and mock requests.get"""
+        """Start patcher and mock requests.get with side_effect"""
         cls.get_patcher = patch("requests.get")
-        mock_get = cls.get_patcher.start()
+        cls.mock_get = cls.get_patcher.start()
 
-        # Configure side effects for each API endpoint
-        mock_get.side_effect = [
-            unittest.mock.Mock(json=lambda: cls.org_payload),
-            unittest.mock.Mock(json=lambda: cls.repos_payload),
-        ]
+        def side_effect(url):
+            """Mocked response depending on URL"""
+            if url == "https://api.github.com/orgs/test":
+                return unittest.mock.Mock(json=lambda: cls.org_payload)
+            if url == "https://api.github.com/orgs/test/repos":
+                return unittest.mock.Mock(json=lambda: cls.repos_payload)
+            raise ValueError(f"Unexpected URL: {url}")
+
+        cls.mock_get.side_effect = side_effect
 
     @classmethod
     def tearDownClass(cls):
@@ -110,5 +113,6 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         """Integration test: public_repos filters by license"""
         client = GithubOrgClient("test")
         self.assertEqual(
-            client.public_repos(license="apache-2.0"), self.apache2_repos
-    )
+            client.public_repos(license="apache-2.0"),
+            self.apache2_repos
+            )
