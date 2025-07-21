@@ -70,3 +70,40 @@ class TestMemoize(unittest.TestCase):
             self.assertEqual(first, 42)
             self.assertEqual(second, 42)
             mock_method.assert_called_once()
+
+
+
+
+
+
+
+#!/usr/bin/env python3
+"""Utility functions for accessing nested maps, HTTP requests, and memoization."""
+
+from typing import Mapping, Any, Sequence, Callable
+import requests
+
+
+def access_nested_map(nested_map: Mapping, path: Sequence) -> Any:
+    """Access a value in a nested map using a sequence of keys."""
+    for key in path:
+        nested_map = nested_map[key]
+    return nested_map
+
+
+def get_json(url: str) -> Any:
+    """Fetch JSON data from a given URL."""
+    response = requests.get(url)
+    return response.json()
+
+
+def memoize(method: Callable) -> Callable:
+    """Decorator to cache method return value."""
+    attr_name = "_{}".format(method.__name__)
+
+    def wrapper(self):
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, method(self))
+        return getattr(self, attr_name)
+
+    return wrapper
