@@ -1,0 +1,51 @@
+#!/bin/bash
+
+set -e
+
+install_kubectl() {
+  echo "kubectl not found. Installing..."
+  curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  chmod +x kubectl
+  sudo mv kubectl /usr/local/bin/
+  echo "kubectl installed successfully."
+}
+
+install_minikube() {
+  echo "minikube not found. Installing..."
+  curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+  sudo install minikube-linux-amd64 /usr/local/bin/minikube
+  rm minikube-linux-amd64
+  echo "Minikube installed successfully."
+}
+
+echo "Checking dependencies..."
+
+if ! command -v kubectl &> /dev/null
+then
+  install_kubectl
+else
+  echo "kubectl is already installed."
+fi
+
+if ! command -v minikube &> /dev/null
+then
+  install_minikube
+else
+  echo "Minikube is already installed."
+fi
+
+echo "Starting Kubernetes cluster with Minikube..."
+minikube start
+
+echo "Minikube started successfully."
+
+echo "Checking cluster info..."
+kubectl cluster-info
+
+echo "Checking node status..."
+kubectl get nodes
+
+echo "Retrieving available pods..."
+kubectl get pods --all-namespaces
+
+echo "Kubernetes cluster is up, verified, and pods are listed!"

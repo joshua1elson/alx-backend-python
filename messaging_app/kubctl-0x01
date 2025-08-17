@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+APP_NAME="messaging-app-deployment"
+
+echo "Scaling $APP_NAME to 3 replicas..."
+kubectl scale deployment $APP_NAME --replicas=3
+
+echo "Verifying pods..."
+kubectl get pods -l app=messaging-app
+
+echo "Checking services..."
+kubectl get svc messaging-app-service
+
+echo "Port-forwarding service to localhost:8000 for testing..."
+kubectl port-forward svc/messaging-app-service 8000:8000 &
+PF_PID=$!
+
+sleep 5
+
+echo "Running load test with wrk (10s, 2 threads, 10 connections)..."
+wrk -t2 -c10 -d10s http://127.0.0.1:8000/ || echo "wrk not installed! Install with: sudo apt install wrk"
+
+kill $PF_PID
+
+echo "Monitoring resource usage (CPU/MEM)..."
+kubectl top pods
+
+echo "Done!"
